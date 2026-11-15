@@ -51,8 +51,10 @@ jobs:
       - name: Diagnostics (kept at tail on purpose)
         if: always()
         run: |
-          echo "===== BACKEND LOG TAIL (full) ====="
-          docker compose logs --tail=25 healenium 2>/dev/null || echo "none"
+          echo "===== BACKEND: selector/save/heal/session lines ====="
+          docker compose logs healenium 2>/dev/null | grep -iE "selector|save|heal|session|error|exception" | tail -n 60 || echo "none"
+          echo "===== BACKEND LOG TAIL (last 40) ====="
+          docker compose logs --tail=40 healenium 2>/dev/null || echo "none"
           echo "===== POSTGRES LOG TAIL (full) ====="
           docker compose logs --tail=15 postgre 2>/dev/null || echo "none"
           echo "===== MVN ERRORS ====="
