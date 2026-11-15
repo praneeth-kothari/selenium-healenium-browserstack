@@ -3,3 +3,5 @@ target/
 .idea/
 *.iml
 *.log
+_sealed.json
+_bs_seal.py

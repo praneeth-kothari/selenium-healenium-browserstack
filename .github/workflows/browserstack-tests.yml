@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/**'
       - 'pom.xml'
+      - 'docker-compose.yml'
       - '.github/workflows/browserstack-tests.yml'
 
 jobs:
@@ -22,12 +23,11 @@ jobs:
 
       - name: Wait for backend to accept connections
         run: |
-          for i in $(seq 1 30); do
-            if curl -sf http://localhost:8000/actuator/health > /dev/null 2>&1 || \
-               curl -sf http://localhost:8000 > /dev/null 2>&1; then
-              echo "Backend is up"; break
+          for i in $(seq 1 40); do
+            if (echo > /dev/tcp/localhost/8000) 2>/dev/null; then
+              echo "Backend is listening on port 8000"; break
             fi
-            echo "Waiting for backend ($i/30)"; sleep 2
+            echo "Waiting for backend ($i/40)"; sleep 2
           done
 
       - uses: actions/setup-java@v4
@@ -43,6 +43,11 @@ jobs:
       - name: Run tests on BrowserStack
         if: ${{ env.BROWSERSTACK_USERNAME != '' && env.BROWSERSTACK_ACCESS_KEY != '' }}
         run: mvn -B clean test
+
+      - name: Summarize test results
+        if: always()
+        run: |
+          grep -hE "Tests run|FAILURE|ERROR" target/surefire-reports/*.txt 2>/dev/null || echo "No surefire reports found"
 
       - name: Dump Healenium backend logs
         if: always()
