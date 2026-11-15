@@ -7,6 +7,8 @@ services:
       POSTGRES_DB: healenium_db
     ports:
       - "5432:5432"
+    volumes:
+      - ./healenium-db-init:/docker-entrypoint-initdb.d/
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U healenium_user -d healenium_db"]
       interval: 3s
@@ -20,7 +22,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgre:5432/healenium_db?currentSchema=public
       SPRING_DATASOURCE_USERNAME: healenium_user
       SPRING_DATASOURCE_PASSWORD: healenium_pass
-      SPRING_LIQUIBASE_DEFAULT_SCHEMA: public
+      SPRING_LIQUIBASE_DEFAULT_SCHEMA: healenium
     ports:
       - "8000:8000"
     depends_on:
