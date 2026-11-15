@@ -16,6 +16,7 @@ services:
   healenium:
     image: healenium/hlm-backend:4.0.2
     environment:
+      SERVER_PORT: 8000
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgre:5432/healenium_db?currentSchema=public
       SPRING_DATASOURCE_USERNAME: healenium_user
       SPRING_DATASOURCE_PASSWORD: healenium_pass

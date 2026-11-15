@@ -51,10 +51,10 @@ jobs:
       - name: Diagnostics (kept at tail on purpose)
         if: always()
         run: |
-          echo "===== POSTGRES ERRORS ====="
-          docker compose logs postgre 2>/dev/null | grep -iE "error|fatal" | tail -n 10 || echo "none"
-          echo "===== BACKEND ERRORS ====="
-          docker compose logs healenium 2>/dev/null | grep -iE "error|exception" | tail -n 8 || echo "none"
+          echo "===== BACKEND LOG TAIL (full) ====="
+          docker compose logs --tail=25 healenium 2>/dev/null || echo "none"
+          echo "===== POSTGRES LOG TAIL (full) ====="
+          docker compose logs --tail=15 postgre 2>/dev/null || echo "none"
           echo "===== MVN ERRORS ====="
           grep -E "\[ERROR\]" mvn_output.log 2>/dev/null | head -n 40 || echo "none"
           echo "===== MVN TAIL ====="
