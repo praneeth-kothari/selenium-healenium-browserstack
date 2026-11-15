@@ -42,13 +42,16 @@ jobs:
 
       - name: Run tests on BrowserStack
         if: ${{ env.BROWSERSTACK_USERNAME != '' && env.BROWSERSTACK_ACCESS_KEY != '' }}
-        run: mvn -B clean test
+        run: |
+          set -o pipefail
+          mvn -B clean test 2>&1 | tee mvn_output.log
 
-      - name: Summarize test results
+      - name: Diagnostics (log tail - kept short on purpose)
         if: always()
         run: |
-          grep -hE "Tests run|FAILURE|ERROR" target/surefire-reports/*.txt 2>/dev/null || echo "No surefire reports found"
-
-      - name: Dump Healenium backend logs
-        if: always()
-        run: docker compose logs --tail=100 healenium
+          echo "===== MVN OUTPUT (last 60 lines) ====="
+          tail -n 60 mvn_output.log 2>/dev/null || echo "no mvn log"
+          echo "===== POSTGRES ERRORS ====="
+          docker compose logs postgre 2>/dev/null | grep -iE "error|fatal|schema" | tail -n 15 || echo "none"
+          echo "===== HEALENIUM BACKEND ERRORS ====="
+          docker compose logs healenium 2>/dev/null | grep -iE "error|exception|schema|liquibase" | tail -n 25 || echo "none"

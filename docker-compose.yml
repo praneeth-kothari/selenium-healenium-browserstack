@@ -1,20 +1,20 @@
 services:
-  postgres:
+  postgre:
     image: postgres:14-alpine
     environment:
-      POSTGRES_USER: healenium
+      POSTGRES_USER: healenium_user
       POSTGRES_PASSWORD: healenium_pass
-      POSTGRES_DB: healenium
+      POSTGRES_DB: healenium_db
     ports:
       - "5432:5432"
 
   healenium:
     image: healenium/hlm-backend:3.4.1
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/healenium?currentSchema=public
-      SPRING_DATASOURCE_USERNAME: healenium
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgre:5432/healenium_db?currentSchema=public
+      SPRING_DATASOURCE_USERNAME: healenium_user
       SPRING_DATASOURCE_PASSWORD: healenium_pass
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
+      - postgre
