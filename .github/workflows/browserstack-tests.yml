@@ -21,13 +21,14 @@ jobs:
       - name: Start Healenium backend (healing store)
         run: docker compose up -d
 
-      - name: Wait for backend to accept connections
+      - name: Wait for backend to actually listen (HTTP code check)
         run: |
-          for i in $(seq 1 40); do
-            if (echo > /dev/tcp/localhost/8000) 2>/dev/null; then
-              echo "Backend is listening on port 8000"; break
+          for i in $(seq 1 60); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/ || echo 000)
+            if [ "$code" != "000" ]; then
+              echo "Backend responding (HTTP $code) after $i checks"; break
             fi
-            echo "Waiting for backend ($i/40)"; sleep 2
+            echo "Backend not listening yet ($i/60)"; sleep 2
           done
 
       - uses: actions/setup-java@v4
@@ -46,12 +47,14 @@ jobs:
           set -o pipefail
           mvn -B clean test 2>&1 | tee mvn_output.log
 
-      - name: Diagnostics (log tail - kept short on purpose)
+      - name: Diagnostics (kept at tail on purpose)
         if: always()
         run: |
-          echo "===== MVN OUTPUT (last 60 lines) ====="
-          tail -n 60 mvn_output.log 2>/dev/null || echo "no mvn log"
           echo "===== POSTGRES ERRORS ====="
-          docker compose logs postgre 2>/dev/null | grep -iE "error|fatal|schema" | tail -n 15 || echo "none"
-          echo "===== HEALENIUM BACKEND ERRORS ====="
-          docker compose logs healenium 2>/dev/null | grep -iE "error|exception|schema|liquibase" | tail -n 25 || echo "none"
+          docker compose logs postgre 2>/dev/null | grep -iE "error|fatal" | tail -n 10 || echo "none"
+          echo "===== BACKEND ERRORS ====="
+          docker compose logs healenium 2>/dev/null | grep -iE "error|exception" | tail -n 8 || echo "none"
+          echo "===== MVN ERRORS ====="
+          grep -E "\[ERROR\]" mvn_output.log 2>/dev/null | head -n 40 || echo "none"
+          echo "===== MVN TAIL ====="
+          tail -n 30 mvn_output.log 2>/dev/null || echo "no mvn log"
